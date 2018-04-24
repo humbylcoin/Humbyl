@@ -106,6 +106,25 @@ contract('HumbylPresale', function ([owner, wallet, investor]) {
         ownerBalance.should.be.bignumber.equal(expectedBalance);
     });
 
+    it('test approve', async function () {
+        var is = await this.crowdsale.operators(investor);
+        is.should.be.equal(false);
+        await this.crowdsale.allow(investor, true, {from: investor}).should.be.rejectedWith(EVMRevert);
+        is = await this.crowdsale.whitelist(investor);
+        is.should.be.equal(false);
+        //
+        await this.crowdsale.approve(investor, true, {from: investor}).should.be.rejectedWith(EVMRevert);
+        is = await this.crowdsale.operators(investor);
+        is.should.be.equal(false);
+        //
+        await this.crowdsale.approve(investor, true, {from: owner});
+        is = await this.crowdsale.operators(investor);
+        is.should.be.equal(true);
+        await this.crowdsale.allow(investor, true, {from: investor});
+        is = await this.crowdsale.whitelist(investor);
+        is.should.be.equal(true);
+    });
+
     /*it('should not accept payments before start', async function () {
      await this.crowdsale.send(ether(1)).should.be.rejectedWith(EVMRevert);
      await this.crowdsale.buyTokens(investor, { from: investor, value: ether(1) }).should.be.rejectedWith(EVMRevert);
