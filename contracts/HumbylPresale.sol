@@ -10,17 +10,17 @@ contract HumbylPresale is Ownable, CappedCrowdsale {
   mapping(address => bool) public whitelist;
   uint256 public constant MIN_PUT = 2345 * (10 ** uint256(15));
 
-  function HumbylPresale(uint256 _rate, address _wallet, HumbylCoin _token, uint256 _cap) public
+  /*function HumbylPresale(uint256 _rate, address _wallet, HumbylCoin _token, uint256 _cap) public
     Crowdsale(_rate, _wallet, _token)
     CappedCrowdsale(_cap)
   {
-  }
+  }*/
 
-  /*function HumbylPresale() public
-      Crowdsale(4321, address(0xaa2b65eeA50Eb267406a2fc4CAe065c6DfDf4304), HumbylCoin(0x2CEc5169e45F0B56c69fE1082402C48f757c34f4))
+  function HumbylPresale() public
+      Crowdsale(4321, address(0x36Ca37CDEa2D1f962394f1CaAF04fe68AEab16a9), HumbylCoin(0xedf39a0339b2ca9265ff7075aa88cf193089b1da))
       CappedCrowdsale(5000000 * (10 ** uint256(18)) / 4321)
     {
-    }*/
+    }
 
   bool public isFinalized = false;
 
