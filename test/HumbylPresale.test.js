@@ -22,10 +22,7 @@ contract('HumbylPresale', function ([owner, wallet, investor]) {
     before(async function () {
         // Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
         await advanceBlock();
-    }
-
-    )
-    ;
+    });
 
     beforeEach(async function () {
         this.token = await HumbylCoin.new({from: owner});
