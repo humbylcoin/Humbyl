@@ -16,11 +16,12 @@ const HumbylCrowdsale = artifacts.require('HumbylCrowdsale');
 const RefundVault = artifacts.require('RefundVault');
 
 contract('HumbylCrowdsale', function ([owner, wallet, investor]) {
-  const RATE = new BigNumber(10);
-  const GOAL = ether(10);
-  const CAP = ether(20);
-  const MIN_PUT = new BigNumber('2345000000000000000');
-  const NOW_MIN_PUT = ether(1);
+    const INIT_RATE = new BigNumber(10);
+    const FINAL_RATE = new BigNumber(6);
+    const GOAL = ether(10);
+    const CAP = ether(20);
+    const MIN_PUT = new BigNumber('3000000000000000000');
+    const NOW_MIN_PUT =  ether(1);
 
   before(async function () {
     // Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -28,14 +29,15 @@ contract('HumbylCrowdsale', function ([owner, wallet, investor]) {
   });
 
   beforeEach(async function () {
+    console.log('latestTime: ' + latestTime())
     this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
 
     this.token = await HumbylCoin.new({ from: owner });
     this.vault = await RefundVault.new(wallet, { from: owner });
-    this.rate = RATE;
-    this.finalRate = new BigNumber(6);
+    this.rate = this.initRate = INIT_RATE;
+    this.finalRate = FINAL_RATE;
     this.crowdsale = await HumbylCrowdsale.new(
       this.openingTime, this.closingTime, wallet, this.token.address, GOAL, CAP, this.rate, this.finalRate
     );
@@ -61,13 +63,17 @@ contract('HumbylCrowdsale', function ([owner, wallet, investor]) {
     const walletAddress = await this.crowdsale.wallet();
     const goal = await this.crowdsale.goal();
     const cap = await this.crowdsale.cap();
+    const initRate = await this.crowdsale.initialRate();
+    const finalRate = await this.crowdsale.finalRate();
 
     openingTime.should.be.bignumber.equal(this.openingTime);
     closingTime.should.be.bignumber.equal(this.closingTime);
-    rate.should.be.bignumber.equal(RATE);
+    rate.should.be.bignumber.equal(INIT_RATE);
     walletAddress.should.be.equal(wallet);
     goal.should.be.bignumber.equal(GOAL);
     cap.should.be.bignumber.equal(CAP);
+    initRate.should.be.bignumber.equal(this.initRate);
+    finalRate.should.be.bignumber.equal(this.finalRate);
   });
 
   it('should not accept payments before start', async function () {
@@ -79,11 +85,13 @@ contract('HumbylCrowdsale', function ([owner, wallet, investor]) {
   it('should accept payments during the sale', async function () {
     await this.allowWhitelist();
     const investmentAmount = NOW_MIN_PUT;
-    const expectedTokenAmount = RATE.mul(investmentAmount);
+    const expectedTokenAmount = INIT_RATE.mul(investmentAmount);
 
     await increaseTimeTo(this.openingTime)
     await this.crowdsale.buyTokens(investor, { value: investmentAmount, from: investor }).should.be.fulfilled;
     (await this.token.balanceOf(investor)).should.be.bignumber.equal(expectedTokenAmount);
+    const deliveredToken = await this.crowdsale.deliveredTokens(investor);
+    deliveredToken.should.be.bignumber.equal(expectedTokenAmount);
   });
   it('should half price in the middle', async function () {
       await this.allowWhitelist();
@@ -118,16 +126,10 @@ contract('HumbylCrowdsale', function ([owner, wallet, investor]) {
 
     const beforeFinalization = web3.eth.getBalance(wallet);
     await increaseTimeTo(this.afterClosingTime);
-    const beforeOwnerBalance = await this.token.balanceOf(owner);
-    // const beforeCrowdsaleBalance = await this.token.balanceOf(this.crowdsale.address);
-    // beforeCrowdsaleBalance.should.be.bignumber.greaterThan(0);
 
     await this.crowdsale.finalize({ from: owner });
     const afterFinalization = web3.eth.getBalance(wallet);
     const afterOwnerBalance = await this.token.balanceOf(owner);
-    // const afterCrowdsaleBalance = await this.token.balanceOf(this.crowdsale.address);
-    // afterCrowdsaleBalance.should.be.bignumber.equal(0);
-    // beforeOwnerBalance.add(beforeCrowdsaleBalance).should.be.bignumber.equal(afterOwnerBalance)
 
     afterFinalization.minus(beforeFinalization).should.be.bignumber.equal(GOAL);
   });
@@ -140,15 +142,10 @@ contract('HumbylCrowdsale', function ([owner, wallet, investor]) {
     await this.crowdsale.sendTransaction({ value: NOW_MIN_PUT, from: investor, gasPrice: 0 });
     await increaseTimeTo(this.afterClosingTime);
     const beforeOwnerBalance = await this.token.balanceOf(owner);
-    // const beforeCrowdsaleBalance = await this.token.balanceOf(this.crowdsale.address);
-    // beforeCrowdsaleBalance.should.be.bignumber.greaterThan(0);
 
     await this.crowdsale.finalize({ from: owner });
     await this.crowdsale.claimRefund({ from: investor, gasPrice: 0 }).should.be.fulfilled;
     const afterOwnerBalance = await this.token.balanceOf(owner);
-    // const afterCrowdsaleBalance = await this.token.balanceOf(this.crowdsale.address);
-    // afterCrowdsaleBalance.should.be.bignumber.equal(0);
-    // beforeOwnerBalance.add(beforeCrowdsaleBalance).should.be.bignumber.equal(afterOwnerBalance)
 
     const balanceAfterRefund = web3.eth.getBalance(investor);
     balanceBeforeInvestment.should.be.bignumber.equal(balanceAfterRefund);
