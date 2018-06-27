@@ -17,7 +17,7 @@ contract HumbylPresale is Ownable, CappedCrowdsale {
   {
   }*/
 
-  function HumbylPresale() public
+  constructor() public
       Crowdsale(4321, address(0x36Ca37CDEa2D1f962394f1CaAF04fe68AEab16a9), HumbylCoin(0xedF39A0339b2ca9265ff7075aa88Cf193089b1da))
       CappedCrowdsale(5000000 * (10 ** uint256(18)) / 4321)
     {
@@ -34,7 +34,7 @@ contract HumbylPresale is Ownable, CappedCrowdsale {
     require(!isFinalized);
 
     finalization();
-    Finalized();
+    emit Finalized();
 
     isFinalized = true;
   }

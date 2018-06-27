@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
 import 'zeppelin-solidity/contracts/token/ERC20/PausableToken.sol';
 
@@ -14,17 +14,17 @@ contract HumbylCoin is PausableToken {
     uint256 public constant TOTAL_SUPPLY = initialSupply * (10 ** uint256(decimals));
     uint256 public constant INIT_RANK_BASE = 20000 * (10 ** uint256(decimals));  // 20k
 
-    function HumbylCoin() public {
+    constructor() public {
         totalSupply_ = TOTAL_SUPPLY;
         balances[msg.sender] = TOTAL_SUPPLY;
         rankBase = INIT_RANK_BASE;
-        Transfer(0x0, msg.sender, TOTAL_SUPPLY);
+        emit Transfer(0x0, msg.sender, TOTAL_SUPPLY);
     }
 
     function checkRank(address _owner) internal {
         uint256 amount = balances[_owner];
         if(amount >= rankBase) {
-            Rank(_owner, _owner, amount, now);
+            emit Rank(_owner, _owner, amount, now);
         }
     }
 

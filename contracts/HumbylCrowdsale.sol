@@ -30,28 +30,28 @@ contract HumbylCrowdsale is CappedCrowdsale, RefundableCrowdsale, IncreasingPric
     */
 
     // for ICO
-
-    function HumbylCrowdsale() public
+    /*
+    function constructor() public
     Crowdsale(uint256(2678), address(0xaa2b65eea50eb267406a2fc4cae065c6dfdf4304), HumbylCoin(0xc371b3853b942F41384fE1639F2784B56a549871))
     CappedCrowdsale(54000 * (10 ** uint256(18)))
-    TimedCrowdsale(uint256(1526967000), uint256(1535785199))
-    RefundableCrowdsale(3000 * (10 ** uint256(18)))
-    IncreasingPriceCrowdsale(uint256(2678), uint256(1339))
-    {
-    }
-
-
-    // for dev
-    /*
-    function HumbylCrowdsale() public
-    Crowdsale(uint256(2678), address(0xaa2b65eea50eb267406a2fc4cae065c6dfdf4304), HumbylCoin(0xf204a4ef082f5c04bb89f7d5e6568b796096735a))
-    CappedCrowdsale(54000 * (10 ** uint256(18)))
-    TimedCrowdsale(uint256(1526899975), uint256(1535785199))
+    TimedCrowdsale(uint256(1527067263), uint256(1527067563))
     RefundableCrowdsale(3000 * (10 ** uint256(18)))
     IncreasingPriceCrowdsale(uint256(2678), uint256(1339))
     {
     }
     */
+
+    // for dev
+
+    constructor() public
+    Crowdsale(uint256(2678), address(0xaa2b65eea50eb267406a2fc4cae065c6dfdf4304), HumbylCoin(0xa590356dea66722dce7f9cab645f584a358a39a1))
+    CappedCrowdsale(54000 * (10 ** uint256(18)))
+    TimedCrowdsale(uint256(1527109232), uint256(1527109632))
+    RefundableCrowdsale(3 * (10 ** uint256(18)))
+    IncreasingPriceCrowdsale(uint256(2678), uint256(1339))
+    {
+    }
+
 
     /**
      * @dev Source of tokens. Override this method to modify the way in which the crowdsale ultimately gets and sends its tokens.
@@ -96,7 +96,7 @@ contract HumbylCrowdsale is CappedCrowdsale, RefundableCrowdsale, IncreasingPric
         bool could = operators[msg.sender];
         require(could || (owner == msg.sender));
         whitelist[_beneficiary] = _allowed;
-        Allowed(_beneficiary, _allowed);
+        emit Allowed(_beneficiary, _allowed);
     }
 
     /**
@@ -108,7 +108,7 @@ contract HumbylCrowdsale is CappedCrowdsale, RefundableCrowdsale, IncreasingPric
         require(could || (owner == msg.sender));
         for (uint256 i = 0; i < _beneficiaries.length; i++) {
             whitelist[_beneficiaries[i]] = _allowed;
-            Allowed(_beneficiaries[i], _allowed);
+            emit Allowed(_beneficiaries[i], _allowed);
         }
     }
 

@@ -1,4 +1,4 @@
-const HumbylCrowdsale = artifacts.require("./HumbylCrowdsale.sol")
+const HumbylBridge = artifacts.require("./HumbylBridge.sol")
 const HumbylCoin = artifacts.require("./HumbylCoin.sol")
 
 module.exports = function(deployer, network, accounts) {
@@ -10,9 +10,9 @@ module.exports = function(deployer, network, accounts) {
     const initialRate = 200
     const finalRate = 100
 
-    // deployer.deploy(HumbylCoin).then(function () {
-    //     deployer.deploy(HumbylCrowdsale, startTime, endTime, wallet, HumbylCoin.address, goal, cap, initialRate, finalRate).catch(function (error) {
-    //         console.log('error: ' + error)
-    //     })
-    // })
+    deployer.deploy(HumbylCoin).then(function () {
+        deployer.deploy(HumbylBridge, wallet, HumbylCoin.address).catch(function (error) {
+            console.log('error: ' + error)
+        })
+    })
 };
