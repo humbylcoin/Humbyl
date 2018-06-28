@@ -32,9 +32,11 @@ contract('HumbylBridge', function ([owner, wallet, investor]) {
 
     const walletAddress = await this.bridge.wallet();
     const tokenAddress = await this.bridge.token();
+    const o = await this.bridge.owner();
 
     walletAddress.should.be.equal(wallet);
     tokenAddress.should.be.equal(this.token.address);
+    o.should.be.equal(owner);
   });
 
   it('test approve', async function () {
@@ -55,57 +57,58 @@ contract('HumbylBridge', function ([owner, wallet, investor]) {
         assert(walletAddress === investor);
   });
   it('test withdraw for owner', async function () {
-      const initAllowance = 1000;
-      const identity = 1;
-      const weiAmount = 1;
-      await this.token.approve(this.bridge.address, initAllowance, { from: owner});
+      const initAllowance = new BigNumber(1000);
+      const totalBalance = initAllowance.mul(5);
+      const identity = new BigNumber(1);
+      const weiAmount = new BigNumber(1);
+      // transfer totalBalance tokens into the wallet
+      await this.token.transfer(wallet, totalBalance, { from: owner});
+      var balance = await this.token.balanceOf(wallet);
+      balance.should.be.bignumber.equal(totalBalance);
+      //
+      await this.token.approve(this.bridge.address, initAllowance, { from: wallet});
+      var allowance = await this.token.allowance(wallet, this.bridge.address);
+      allowance.should.be.bignumber.equal(initAllowance);
+      // not owner
       await this.bridge.withdraw(investor, identity, weiAmount, { from: investor}).should.be.rejectedWith(EVMRevert);
-
+      // success
+      await this.bridge.withdraw(investor, identity, weiAmount, { from: owner});
+      var walletBalance = await this.token.balanceOf(wallet);
+      walletBalance.should.be.bignumber.equal(totalBalance.minus(weiAmount));
+      var balance = await this.token.balanceOf(investor);
+      balance.should.be.bignumber.equal(weiAmount);
+      // insufficient balance
+      await this.bridge.withdraw(investor, identity, initAllowance, { from: owner}).should.be.rejectedWith(EVMRevert);
+      // success
+      await this.bridge.withdraw(investor, identity, initAllowance.minus(weiAmount), { from: owner});
+      var allowance = await this.token.allowance(wallet, this.bridge.address);
+      allowance.should.be.bignumber.equal(0);
+      var balance = await this.token.balanceOf(investor);
+      balance.should.be.bignumber.equal(initAllowance);
   });
-
-  it('should reject payments after end', async function () {
-    await this.allowWhitelist();
-    await increaseTimeTo(this.afterEnd);
-    await this.crowdsale.send(NOW_MIN_PUT).should.be.rejectedWith(EVMRevert);
-    await this.crowdsale.buyTokens(investor, { value: NOW_MIN_PUT, from: investor }).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should reject payments over cap', async function () {
-    await this.allowWhitelist();
-    await increaseTimeTo(this.openingTime);
-    await this.crowdsale.send(CAP);
-    await this.crowdsale.send(1).should.be.rejectedWith(EVMRevert);
-  });
-
-  it('should allow finalization and transfer funds to wallet if the goal is reached', async function () {
-    await this.allowWhitelist();
-    await increaseTimeTo(this.openingTime);
-    await this.crowdsale.send(GOAL);
-
-    const beforeFinalization = web3.eth.getBalance(wallet);
-    await increaseTimeTo(this.afterClosingTime);
-
-    await this.crowdsale.finalize({ from: owner });
-    const afterFinalization = web3.eth.getBalance(wallet);
-    const afterOwnerBalance = await this.token.balanceOf(owner);
-
-    afterFinalization.minus(beforeFinalization).should.be.bignumber.equal(GOAL);
-  });
-
-  it('should allow refunds if the goal is not reached', async function () {
-    await this.allowWhitelist();
-    const balanceBeforeInvestment = web3.eth.getBalance(investor);
-
-    await increaseTimeTo(this.openingTime);
-    await this.crowdsale.sendTransaction({ value: NOW_MIN_PUT, from: investor, gasPrice: 0 });
-    await increaseTimeTo(this.afterClosingTime);
-    const beforeOwnerBalance = await this.token.balanceOf(owner);
-
-    await this.crowdsale.finalize({ from: owner });
-    await this.crowdsale.claimRefund({ from: investor, gasPrice: 0 }).should.be.fulfilled;
-    const afterOwnerBalance = await this.token.balanceOf(owner);
-
-    const balanceAfterRefund = web3.eth.getBalance(investor);
-    balanceBeforeInvestment.should.be.bignumber.equal(balanceAfterRefund);
-  });
+    it('test withdraw for operator', async function () {
+        const initAllowance = new BigNumber(1000);
+        const totalBalance = initAllowance.mul(5);
+        const identity = new BigNumber(1);
+        const weiAmount = new BigNumber(1);
+        // transfer totalBalance tokens into the wallet
+        await this.token.transfer(wallet, totalBalance, { from: owner});
+        var balance = await this.token.balanceOf(wallet);
+        balance.should.be.bignumber.equal(totalBalance);
+        //
+        await this.token.approve(this.bridge.address, initAllowance, { from: wallet});
+        var allowance = await this.token.allowance(wallet, this.bridge.address);
+        allowance.should.be.bignumber.equal(initAllowance);
+        // not operator
+        await this.bridge.withdraw(investor, identity, weiAmount, { from: investor}).should.be.rejectedWith(EVMRevert);
+        // success
+        await this.bridge.approve(investor, true, { from: owner});
+        await this.bridge.withdraw(investor, identity, weiAmount, { from: investor});
+        var walletBalance = await this.token.balanceOf(wallet);
+        walletBalance.should.be.bignumber.equal(totalBalance.minus(weiAmount));
+        var allowance = await this.token.allowance(wallet, this.bridge.address);
+        allowance.should.be.bignumber.equal(initAllowance.minus(weiAmount));
+        var balance = await this.token.balanceOf(investor);
+        balance.should.be.bignumber.equal(weiAmount);
+    });
 });
