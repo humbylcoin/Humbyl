@@ -1,3 +1,7 @@
 https://blog.zeppelin.solutions/guides/home
 
 solc --overwrite --gas --bin --abi -o dist/contracts zeppelin-solidity/=/Users/tianhuyang/Desktop/work/humbyl/Humbyl/node_modules/zeppelin-solidity/ contracts/HumbylBridge.sol
+
+truffle develop
+
+truffle test ./test/HumbylBridge.test.js

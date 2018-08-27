@@ -11,7 +11,7 @@ module.exports = function(deployer, network, accounts) {
     const finalRate = 100
 
     deployer.deploy(HumbylCoin).then(function () {
-        deployer.deploy(HumbylBridge, wallet, HumbylCoin.address).catch(function (error) {
+        deployer.deploy(HumbylBridge, wallet, HumbylCoin.address, 1339).catch(function (error) {
             console.log('error: ' + error)
         })
     })
