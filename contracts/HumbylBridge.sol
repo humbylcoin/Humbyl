@@ -136,6 +136,7 @@ contract HumbylBridge is Destructible {
         bool could = operators[msg.sender];
         require(could || (owner == msg.sender));
         uint256 _ethAmount = _creditAmount.div(rate);
+        require(_ethAmount > 0);
         _beneficiary.transfer(_ethAmount);
         emit SoldCredits(_identity, _beneficiary, _creditAmount, _ethAmount);
     }
@@ -169,5 +170,11 @@ contract HumbylBridge is Destructible {
      */
     function withdrawETH(address _beneficiary, uint256 _amount) onlyOwner external {
         _beneficiary.transfer(_amount);
+    }
+
+    /**
+     * @dev deposit ETH to this contract
+     */
+    function deposit() external payable {
     }
 }
