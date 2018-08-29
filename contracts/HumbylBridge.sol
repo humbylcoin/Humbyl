@@ -10,7 +10,7 @@ contract HumbylBridge is Destructible {
     address public wallet;
     ERC20 public token;
     uint256 public rate; // tokens per ETH
-    uint256 public ethCredits; // credits bought from ETH
+    int256 public ethCredits; // credits bought from ETH
     mapping(address => bool) public operators;
 
     event BoughtCredits(address indexed from, uint256 indexed identity, uint256 ethAmount, uint256 creditAmount);
@@ -83,7 +83,7 @@ contract HumbylBridge is Destructible {
     function _buyCredits(address _from, uint256 _ethAmount, uint256 _identity) internal {
         uint256 _creditAmount = _ethAmount.mul(rate);
         require(_creditAmount > 0);
-        ethCredits = ethCredits.add(_creditAmount);
+        ethCredits += int256(_creditAmount);
         emit BoughtCredits(_from, _identity, _ethAmount, _creditAmount);
     }
 
@@ -137,6 +137,7 @@ contract HumbylBridge is Destructible {
         require(could || (owner == msg.sender));
         uint256 _ethAmount = _creditAmount.div(rate);
         require(_ethAmount > 0);
+        ethCredits -= int256(_creditAmount);
         _beneficiary.transfer(_ethAmount);
         emit SoldCredits(_identity, _beneficiary, _creditAmount, _ethAmount);
     }

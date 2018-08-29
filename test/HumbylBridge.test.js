@@ -176,6 +176,8 @@ contract('HumbylBridge', function ([owner, wallet, investor]) {
         var ethAmount = new BigNumber(0);
         var identity = new BigNumber(1);
         const rate = await this.bridge.rate();
+        var ethCredits = await this.bridge.ethCredits();
+        ethCredits.should.be.bignumber.equal(new BigNumber(0));
         // fail
         await this.bridge.buyCredits(identity, { value: ethAmount, from: investor }).should.be.rejectedWith(EVMRevert);
         // success
@@ -183,7 +185,13 @@ contract('HumbylBridge', function ([owner, wallet, investor]) {
         var creditAmount = ethAmount.mul(rate);
         await this.bridge.buyCredits(identity, { value: ethAmount, from: investor }).should.be.fulfilled;
         var args = {from: investor, identity: identity, ethAmount: ethAmount, creditAmount: creditAmount};
+        var ethCredits = await this.bridge.ethCredits();
+        ethCredits.should.be.bignumber.equal(creditAmount);
         await verifyEvents({name: 'BoughtCredits', args: args}, 1)
+        //
+        await this.bridge.buyCredits(identity, { value: ethAmount, from: investor }).should.be.fulfilled;
+        var ethCredits = await this.bridge.ethCredits();
+        ethCredits.should.be.bignumber.equal(creditAmount.mul(2));
     });
 
     it('test buyCreditsRate', async function () {
@@ -218,7 +226,11 @@ contract('HumbylBridge', function ([owner, wallet, investor]) {
         var balance = await web3.eth.getBalance(this.bridge.address);
         balance.should.be.bignumber.equal(ethAmount);
         await this.bridge.sellCredits(identity, beneficiary, creditAmount, { from: investor}).should.be.rejectedWith(EVMRevert);
+        var ethCredits = await this.bridge.ethCredits();
+        ethCredits.should.be.bignumber.equal(new BigNumber(0));
         await this.bridge.sellCredits(identity, beneficiary, creditAmount, { from: owner}).should.be.fulfilled;
+        ethCredits = await this.bridge.ethCredits();
+        ethCredits.should.be.bignumber.equal(new BigNumber(-creditAmount));
         beneficiaryBalance = beneficiaryBalance.add(ethAmount);
         balance = await web3.eth.getBalance(beneficiary);
         balance.should.be.bignumber.equal(beneficiaryBalance);
@@ -232,6 +244,8 @@ contract('HumbylBridge', function ([owner, wallet, investor]) {
         await this.bridge.sellCredits(identity, beneficiary, creditAmount, { from: owner}).should.be.rejectedWith(EVMRevert);
         creditAmount = creditAmount.add(new BigNumber(1));
         await this.bridge.sellCredits(identity, beneficiary, creditAmount, { from: owner}).should.be.fulfilled;
+        ethCredits = await this.bridge.ethCredits();
+        ethCredits.should.be.bignumber.equal(new BigNumber(-2 * creditAmount));
         beneficiaryBalance = beneficiaryBalance.add(ethAmount);
         balance = await web3.eth.getBalance(beneficiary);
         balance.should.be.bignumber.equal(beneficiaryBalance);
