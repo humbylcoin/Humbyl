@@ -59,7 +59,7 @@ contract HumbylBridge is Destructible {
 
     /*constructor() public
     {
-        wallet = address(0xaa2b65eeA50Eb267406a2fc4CAe065c6DfDf4304);
+        wallet = address(0x90e2f2c6aB6A733503CcCd3E5D0bCd7CeA7D13f4);
         address _token = address(0xa590356dea66722dce7f9cab645f584a358a39a1);
         token = ERC20(_token);
         rate = 1339;
