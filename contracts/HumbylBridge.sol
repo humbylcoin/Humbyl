@@ -63,7 +63,7 @@ contract HumbylBridge is Destructible {
         wallet = address(0x90e2f2c6aB6A733503CcCd3E5D0bCd7CeA7D13f4);
         address _token = address(0xa590356dea66722dce7f9cab645f584a358a39a1);
         token = ERC20(_token);
-        rate = 1339;
+        rate = 789;
     }*/
 
     // for prod
@@ -72,7 +72,7 @@ contract HumbylBridge is Destructible {
         wallet = address(0x90e2f2c6aB6A733503CcCd3E5D0bCd7CeA7D13f4);
         address _token = address(0xc371b3853b942F41384fE1639F2784B56a549871);
         token = ERC20(_token);
-        rate = 1339;
+        rate = 789;
     }*/
 
     /**
